@@ -54,6 +54,38 @@ const Index = () => {
           <p className="text-sm text-gray-500 mt-4">
             Enter the URL of your chatbot webhook. The chat widget will send user messages to this URL and display responses.
           </p>
+          
+          <div className="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200">
+            <h3 className="text-md font-medium mb-2">Webhook Specifications:</h3>
+            <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
+              <li><span className="font-semibold">Request Method:</span> POST</li>
+              <li><span className="font-semibold">Content-Type:</span> application/json</li>
+              <li><span className="font-semibold">Request Body:</span>
+                <pre className="bg-gray-100 p-2 rounded mt-1 text-xs overflow-auto">
+{`{
+  "message": "User's message text",
+  "userId": "anonymous-user",
+  "timestamp": "2025-05-07T12:34:56.789Z"
+}`}
+                </pre>
+              </li>
+              <li><span className="font-semibold">Expected Response:</span> JSON with one of these fields:
+                <pre className="bg-gray-100 p-2 rounded mt-1 text-xs overflow-auto">
+{`{
+  "message": "Bot response text"
+}
+// OR
+{
+  "response": "Bot response text"
+}
+// OR
+{
+  "reply": "Bot response text"
+}`}
+                </pre>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       
