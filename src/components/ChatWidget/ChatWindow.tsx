@@ -9,9 +9,10 @@ interface ChatWindowProps {
   onClose: () => void;
   messages: Message[];
   onSendMessage: (message: string) => void;
+  isLoading?: boolean;
 }
 
-const ChatWindow = ({ isOpen, onClose, messages, onSendMessage }: ChatWindowProps) => {
+const ChatWindow = ({ isOpen, onClose, messages, onSendMessage, isLoading = false }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,15 +44,28 @@ const ChatWindow = ({ isOpen, onClose, messages, onSendMessage }: ChatWindowProp
             <p>Send a message to start chatting</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))
+          <>
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-accent text-accent-foreground rounded-2xl px-4 py-2 rounded-tl-none max-w-[80%]">
+                  <div className="flex space-x-2">
+                    <div className="w-2 h-2 rounded-full bg-accent-foreground/70 animate-bounce"></div>
+                    <div className="w-2 h-2 rounded-full bg-accent-foreground/70 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-accent-foreground/70 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
       
       {/* Input */}
-      <ChatInput onSendMessage={onSendMessage} />
+      <ChatInput onSendMessage={onSendMessage} isDisabled={isLoading} />
     </div>
   );
 };

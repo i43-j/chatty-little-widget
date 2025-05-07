@@ -4,16 +4,24 @@ import { v4 as uuidv4 } from 'uuid';
 import ChatBubble from './ChatBubble';
 import ChatWindow from './ChatWindow';
 import { Message } from './ChatMessage';
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatWidgetProps {
   initialMessage?: string;
   botName?: string;
+  webhookUrl?: string;
 }
 
-const ChatWidget = ({ initialMessage = "Hi there! How can I help you today?", botName = "Support Bot" }: ChatWidgetProps) => {
+const ChatWidget = ({ 
+  initialMessage = "Hi there! How can I help you today?", 
+  botName = "Support Bot",
+  webhookUrl = "" 
+}: ChatWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   // Add initial message when component mounts
   useEffect(() => {
@@ -36,7 +44,7 @@ const ChatWidget = ({ initialMessage = "Hi there! How can I help you today?", bo
     }
   };
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     // Add user message
     const userMessage: Message = {
       id: uuidv4(),
@@ -46,22 +54,73 @@ const ChatWidget = ({ initialMessage = "Hi there! How can I help you today?", bo
     };
     
     setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setIsLoading(true);
     
-    // Simulate bot response after a short delay
-    setTimeout(() => {
-      const botResponse: Message = {
+    try {
+      if (webhookUrl) {
+        // Call external API for chatbot response
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: content,
+            userId: 'anonymous-user', // You can implement user identification
+            timestamp: new Date().toISOString()
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to get response from chatbot');
+        }
+        
+        const data = await response.json();
+        const botResponse: Message = {
+          id: uuidv4(),
+          content: data.message || data.response || data.reply || "Sorry, I couldn't process that response.",
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        
+        setMessages((prevMessages) => [...prevMessages, botResponse]);
+      } else {
+        // Fallback to simulated response
+        setTimeout(() => {
+          const botResponse: Message = {
+            id: uuidv4(),
+            content: getBotResponse(content),
+            sender: 'bot',
+            timestamp: new Date()
+          };
+          
+          setMessages((prevMessages) => [...prevMessages, botResponse]);
+          
+          if (!isOpen) {
+            setUnreadCount((prev) => prev + 1);
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error getting chatbot response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get response from chatbot service.",
+        variant: "destructive",
+      });
+      
+      // Add error message
+      const errorMessage: Message = {
         id: uuidv4(),
-        content: getBotResponse(content),
+        content: "Sorry, I'm having trouble connecting to my brain. Please try again later.",
         sender: 'bot',
         timestamp: new Date()
       };
       
-      setMessages((prevMessages) => [...prevMessages, botResponse]);
-      
-      if (!isOpen) {
-        setUnreadCount((prev) => prev + 1);
-      }
-    }, 1000);
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Simple bot response function - this would be replaced with actual chatbot logic
@@ -87,6 +146,7 @@ const ChatWidget = ({ initialMessage = "Hi there! How can I help you today?", bo
         onClose={toggleChat} 
         messages={messages} 
         onSendMessage={handleSendMessage}
+        isLoading={isLoading}
       />
     </>
   );
