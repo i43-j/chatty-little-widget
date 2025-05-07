@@ -13,7 +13,7 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget = ({ 
-  initialMessage = "Hi there! How can I help you today?", 
+  initialMessage = "", 
   botName = "Support Bot",
   webhookUrl = "" 
 }: ChatWidgetProps) => {
@@ -23,9 +23,9 @@ const ChatWidget = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Add initial message when component mounts
+  // Only add initial message if it's provided and not empty
   useEffect(() => {
-    if (initialMessage) {
+    if (initialMessage && initialMessage.trim() !== '') {
       const initialMsg: Message = {
         id: uuidv4(),
         content: initialMessage,

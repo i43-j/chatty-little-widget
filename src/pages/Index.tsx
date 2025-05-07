@@ -55,30 +55,10 @@ const Index = () => {
             Enter the URL of your chatbot webhook. The chat widget will send user messages to this URL and display responses.
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-2">Customizable</h2>
-            <p className="text-gray-500">Easily adapt the widget to match your brand's colors and style.</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-2">Responsive</h2>
-            <p className="text-gray-500">Works perfectly on all devices, from mobile to desktop.</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-2">Easy to Use</h2>
-            <p className="text-gray-500">Simple integration with any website or application.</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-2">Lightweight</h2>
-            <p className="text-gray-500">Minimal impact on your site's performance.</p>
-          </div>
-        </div>
       </div>
       
-      {/* Chat Widget */}
+      {/* Chat Widget with no initial message */}
       <ChatWidget 
-        initialMessage="👋 Hello! How can I help you today?" 
         webhookUrl={webhookUrl}
       />
     </div>
