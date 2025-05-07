@@ -25,6 +25,9 @@ const ChatWindow = ({ isOpen, onClose, messages, setMessages, isLoading = false,
 
   const handleSendMessage = async (userMessage: string) => {
     // Get or create sessionId
+    console.log("handleSendMessage called with message:", userMessage);
+    console.log("Webhook URL being used:", webhookUrl);
+
     let sessionId = localStorage.getItem('chatSessionId');
     if (!sessionId) {
         sessionId = 'user-' + Math.random().toString(36).substr(2, 9);
@@ -52,6 +55,7 @@ const ChatWindow = ({ isOpen, onClose, messages, setMessages, isLoading = false,
         });
 
         const data = await response.json();
+        console.log("Received response from webhook:", data);
         const botReply = data.response?.reply || "I'm sorry, I didn't understand that.";
 
         // Add bot's reply to the chat
@@ -63,6 +67,7 @@ const ChatWindow = ({ isOpen, onClose, messages, setMessages, isLoading = false,
         setMessages((prev) => [...prev, botMsg]);
 
     } catch (error) {
+        console.error("Fetch error:", error);
         console.error('Error sending message:', error);
         const errorMsg: Message = {
             id: Date.now().toString() + '-error',
