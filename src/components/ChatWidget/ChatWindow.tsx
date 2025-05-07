@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import ChatInput from './ChatInput';
@@ -8,11 +7,12 @@ interface ChatWindowProps {
   isOpen: boolean;
   onClose: () => void;
   messages: Message[];
-  onSendMessage: (message: string) => void;
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>; // NEW: To update messages after sending
   isLoading?: boolean;
+  webhookUrl: string; // NEW: Pass the webhook URL here
 }
 
-const ChatWindow = ({ isOpen, onClose, messages, onSendMessage, isLoading = false }: ChatWindowProps) => {
+const ChatWindow = ({ isOpen, onClose, messages, setMessages, isLoading = false, webhookUrl }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,6 +22,57 @@ const ChatWindow = ({ isOpen, onClose, messages, onSendMessage, isLoading = fals
   }, [messages, isOpen]);
 
   if (!isOpen) return null;
+
+  // 🔥 NEW: Function to send message to webhook + handle sessionId
+  const handleSendMessage = async (userMessage: string) => {
+    // Get or create sessionId
+    let sessionId = localStorage.getItem('chatSessionId');
+    if (!sessionId) {
+      sessionId = 'user-' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('chatSessionId', sessionId);
+    }
+
+    // 1️⃣ Update local messages state immediately
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userMessage
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    // 2️⃣ Send to webhook
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          sessionId: sessionId,
+          userId: sessionId
+        })
+      });
+
+      const data = await response.json();
+      const botReply = data.reply || "I'm sorry, I didn't get that.";
+
+      // 3️⃣ Update messages with bot reply
+      const botMsg: Message = {
+        id: Date.now().toString() + '-bot',
+        role: 'bot',
+        content: botReply
+      };
+      setMessages((prev) => [...prev, botMsg]);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMsg: Message = {
+        id: Date.now().toString() + '-error',
+        role: 'bot',
+        content: "Oops! Something went wrong. Please try again."
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    }
+  };
 
   return (
     <div className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] bg-white rounded-lg shadow-lg overflow-hidden border z-50 flex flex-col slide-in-bottom">
@@ -65,7 +116,7 @@ const ChatWindow = ({ isOpen, onClose, messages, onSendMessage, isLoading = fals
       </div>
       
       {/* Input */}
-      <ChatInput onSendMessage={onSendMessage} isDisabled={isLoading} />
+      <ChatInput onSendMessage={handleSendMessage} isDisabled={isLoading} />
     </div>
   );
 };
